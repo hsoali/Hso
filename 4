@@ -1,0 +1,88 @@
+import { useState } from "react";
+import { useMutation, useQuery } from "convex/react";
+import { api } from "../convex/_generated/api";
+import { toast } from "sonner";
+
+export function GameLobby() {
+  const [code, setCode] = useState("");
+  const [playerName, setPlayerName] = useState("");
+  const createRoom = useMutation(api.rooms.createRoom);
+  const joinRoom = useMutation(api.rooms.joinRoom);
+
+  const handleCreateRoom = async () => {
+    if (!playerName.trim()) {
+      toast.error("Please enter your name");
+      return;
+    }
+    try {
+      const { code } = await createRoom({ playerName: playerName.trim() });
+      toast.success(`Room created! Code: ${code}`);
+    } catch (error) {
+      toast.error("Failed to create room");
+    }
+  };
+
+  const handleJoinRoom = async () => {
+    if (!playerName.trim()) {
+      toast.error("Please enter your name");
+      return;
+    }
+    if (!code.trim()) {
+      toast.error("Please enter room code");
+      return;
+    }
+    try {
+      await joinRoom({ code: code.toUpperCase(), playerName: playerName.trim() });
+      toast.success("Joined room!");
+    } catch (error: any) {
+      toast.error(error.message || "Failed to join room");
+    }
+  };
+
+  return (
+    <div className="flex flex-col gap-6 items-center">
+      <div className="flex flex-col gap-4 w-full">
+        <input
+          type="text"
+          value={playerName}
+          onChange={(e) => setPlayerName(e.target.value)}
+          placeholder="Enter your name"
+          maxLength={20}
+          className="w-full px-4 py-3 bg-slate-800 border border-slate-700 rounded-lg focus:outline-none focus:border-indigo-500 text-lg"
+        />
+        
+        <button
+          onClick={handleCreateRoom}
+          disabled={!playerName.trim()}
+          className="w-full px-6 py-3 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg font-semibold transition text-lg"
+        >
+          Create New Room
+        </button>
+        
+        <div className="relative flex items-center">
+          <div className="flex-grow border-t border-slate-700"></div>
+          <span className="flex-shrink mx-4 text-slate-400">or</span>
+          <div className="flex-grow border-t border-slate-700"></div>
+        </div>
+
+        <div className="flex flex-col gap-2">
+          <input
+            type="text"
+            value={code}
+            onChange={(e) => setCode(e.target.value)}
+            placeholder="Enter room code"
+            maxLength={6}
+            className="w-full px-4 py-3 bg-slate-800 border border-slate-700 rounded-lg focus:outline-none focus:border-indigo-500 text-lg uppercase"
+          />
+          <button
+            onClick={handleJoinRoom}
+            disabled={!code.trim() || !playerName.trim()}
+            className="w-full px-6 py-3 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg font-semibold transition text-lg"
+          >
+            Join Room
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
